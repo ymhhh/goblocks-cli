@@ -8,17 +8,42 @@ server:
     h3:
       enabled: false
       addr: ":8443"
+    health:
+      enabled: true
+      liveness_path: /health
+      readiness_path: /ready
   grpc:
     enabled: {{if .WithGRPC}}true{{else}}false{{end}}
     addr: ":9090"
 resilience:
   breaker:
     max_requests: 3
+    consecutive_failures: 3
     interval: 60s
     timeout: 30s
   rate_limit:
-    rps: 100
-    burst: 200
+    backend: memory
+    # redis:
+    #   addr: "redis://localhost:6379/0"
+    #   key_prefix: "goblocks:rl:"
+    global:
+      rps: 100
+      burst: 200
+    user:
+      enabled: true
+      default_rps: 20
+      burst: 40
+    routes:
+      - method: GET
+        path: /users/:id
+        rps: 50
+        burst: 100
+{{- if .WithAI}}
+      - method: POST
+        path: /ai/chat
+        rps: 5
+        burst: 10
+{{- end}}
 ai:
   enabled: {{if .WithAI}}true{{else}}false{{end}}
   base_url: "https://api.openai.com/v1"

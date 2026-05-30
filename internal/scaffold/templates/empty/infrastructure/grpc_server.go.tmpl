@@ -5,10 +5,20 @@ import (
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 
+	grpcinterceptors "github.com/ymhhh/goblocks/grpc/interceptors"
 	"github.com/ymhhh/goblocks/resilience"
 )
 
-func (a *App) registerGRPC(server *grpc.Server, _ *resilience.Policy) {
+func (a *App) registerGRPC(server *grpc.Server, policy *resilience.Policy) {
+	// app 已通过 ChainUnaryInterceptor 挂载 L1。L2/L3 可在启动前追加，例如：
+	// grpc.ChainUnaryInterceptor(
+	//     grpcinterceptors.UnaryServerInterceptor(policy, nil),
+	//     grpcinterceptors.UserUnaryServerInterceptor(policy, nil),
+	//     grpcinterceptors.RouteUnaryServerInterceptor(policy, nil),
+	// )
+	_ = policy
+	_ = grpcinterceptors.UnaryServerInterceptor
+
 	healthServer := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(server, healthServer)
 	healthServer.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)

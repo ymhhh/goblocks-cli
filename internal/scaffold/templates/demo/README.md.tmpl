@@ -22,8 +22,9 @@ go run .
 
 ## API
 
-- `GET /health` — 健康检查
-- `GET /users/:id` — 获取用户（Demo）
+- `GET /health` — 存活探针（框架 `server.http.health`）
+- `GET /ready` — 就绪探针
+- `GET /users/:id` — 获取用户（L2 每用户配额 + L3 路由限流，见 `config` 中 `user` / `routes`）
 
 {{- if .WithAI}}
 

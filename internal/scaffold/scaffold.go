@@ -14,7 +14,7 @@ import (
 var templateFS embed.FS
 
 // DefaultGoblocksVersion is the default framework version written to generated go.mod.
-const DefaultGoblocksVersion = "v0.2.2"
+const DefaultGoblocksVersion = "v0.3.1"
 
 // Options holds scaffold generation options.
 type Options struct {

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	gblocksapp "github.com/ymhhh/goblocks/app"
 	"github.com/ymhhh/goblocks/config"
+	httpmiddleware "github.com/ymhhh/goblocks/http/middleware"
 	"github.com/ymhhh/goblocks/resilience"
 	"{{.ModulePath}}/domain"
 	"{{.ModulePath}}/handlers"
@@ -46,24 +47,31 @@ func Run(configPath string) error {
 	return gblocks.Run(context.Background())
 }
 
-func (a *App) registerHTTP(engine *gin.Engine, _ *resilience.Policy) {
-	engine.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+func (a *App) registerHTTP(engine *gin.Engine, policy *resilience.Policy) {
+	// /health、/ready 由 app.Run 根据 server.http.health 注册。
 
-	engine.GET("/users/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		ctx := handlers.WithUserID(c.Request.Context(), id)
-		user, err := a.UserHandler.GetUserInfo(ctx)
-		if err != nil {
-			c.JSON(userErrorStatus(err), gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, user)
-	})
+	// L2 每用户配额 + L3 GET /users/:id 见 config resilience.rate_limit.user / routes。
+	users := engine.Group("/users")
+	users.GET("/:id",
+		func(c *gin.Context) {
+			httpmiddleware.GinContextWithUserID(c, c.Param("id"))
+		},
+		httpmiddleware.UserRateLimit(policy, nil),
+		func(c *gin.Context) {
+			id := c.Param("id")
+			ctx := handlers.WithUserID(c.Request.Context(), id)
+			user, err := a.UserHandler.GetUserInfo(ctx)
+			if err != nil {
+				c.JSON(userErrorStatus(err), gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, user)
+		},
+	)
 
 {{- if .WithAI}}
 	if a.AIHandler != nil {
+		// L3 由 config resilience.rate_limit.routes 驱动，app.Run 自动挂载 RouteRateLimit。
 		engine.POST("/ai/chat", a.AIHandler.Chat)
 	}
 {{- end}}
