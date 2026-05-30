@@ -28,7 +28,7 @@ goblocks new full-svc --module github.com/acme/full-svc --demo --with-grpc --wit
 | Flag | 说明 |
 |------|------|
 | `--module` | Go module 路径（必填） |
-| `--goblocks-version` | 生成工程引用的框架版本（默认 `v0.2.1`） |
+| `--goblocks-version` | 生成工程引用的框架版本（默认 `v0.2.2`） |
 | `--demo` | 生成 User Demo |
 | `--with-grpc` | 额外生成 `proto/` 示例 |
 | `--with-ai` | 生成 AI Chat handler |
@@ -36,7 +36,7 @@ goblocks new full-svc --module github.com/acme/full-svc --demo --with-grpc --wit
 生成工程的 `go.mod` 会声明：
 
 ```
-require github.com/ymhhh/goblocks v0.2.1
+require github.com/ymhhh/goblocks v0.2.2
 ```
 
 本地联调框架时使用 `replace`：
@@ -50,7 +50,7 @@ go mod tidy
 
 | CLI 版本 | 默认框架版本 | 说明 |
 |----------|--------------|------|
-| latest   | v0.2.1       | logger/config breaking change、可靠性改进 |
+| latest   | v0.2.2       | health/ready、metrics 安全、tracing hooks、minimal example |
 
 ## 与 goblocks 框架的关系
 
