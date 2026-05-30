@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Test
+        run: go test ./... -count=1
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Checkout goblocks
+        uses: actions/checkout@v4
+        with:
+          repository: ymhhh/goblocks
+          path: goblocks
+
+      - name: Integration test
+        env:
+          GOBLOCKS_PATH: ${{ github.workspace }}/goblocks
+        run: go test ./internal/scaffold/... -count=1 -run TestGenerateAndBuildDemo
