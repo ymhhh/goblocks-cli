@@ -1,30 +1,32 @@
 # goblocks-cli
 
-[Goblocks](https://github.com/ymhhh/goblocks) 脚手架 CLI，生成符合洋葱架构 / DDD 的 Go 服务工程。默认引用框架 **v0.3.1**。
+[中文文档](README.zh-CN.md)
 
-## 安装
+CLI to scaffold Go services with the [Goblocks](https://github.com/ymhhh/goblocks) framework using onion architecture / DDD. Generated projects default to framework **v0.3.1**.
+
+## Install
 
 ```bash
 go install github.com/ymhhh/goblocks-cli/cmd/goblocks@latest
 ```
 
-## 用法
+## Usage
 
 ```bash
-goblocks new my-service --module github.com/ymhhh/my-service
-goblocks new demo-svc --module github.com/ymhhh/demo-svc --demo
-goblocks new full-svc --module github.com/ymhhh/full-svc --demo --with-grpc --with-ai
+goblocks new my-service --module github.com/acme/my-service
+goblocks new demo-svc --module github.com/acme/demo-svc --demo
+goblocks new full-svc --module github.com/acme/full-svc --demo --with-grpc --with-ai
 ```
 
-| Flag | 说明 |
-|------|------|
-| `--module` | Go module 路径（必填） |
-| `--goblocks-version` | 框架版本（默认 `v0.3.1`） |
-| `--demo` | User 示例（L2 挂载示例；L3 由 config `routes` 驱动） |
-| `--with-grpc` | 生成 `proto/` 示例 |
-| `--with-ai` | 生成 AI Chat handler |
+| Flag | Description |
+|------|-------------|
+| `--module` | Go module path (required) |
+| `--goblocks-version` | Framework version (default `v0.3.1`) |
+| `--demo` | User demo (L2 wiring example; L3 driven by config `routes`) |
+| `--with-grpc` | Include `proto/` sample |
+| `--with-ai` | Include AI chat handler |
 
-生成后：
+After generation:
 
 ```bash
 cd <output-dir>
@@ -32,35 +34,35 @@ go mod tidy
 go run .
 ```
 
-框架配置与分层限流说明见 [goblocks 文档](https://github.com/ymhhh/goblocks/tree/main/docs)。
+See [Goblocks docs](https://github.com/ymhhh/goblocks/tree/main/docs) for framework configuration and layered rate limiting.
 
-## 限流与熔断（已有工程）
+## Rate limits & circuit breaker (existing projects)
 
-在工程目录下编辑 `config/config.yaml`（默认 `-f config/config.yaml`）：
+Edit `config/config.yaml` from the project root (default `-f config/config.yaml`):
 
 ```bash
 goblocks config show
 
-# L1 服务级全局限流（框架 app.Run 自动生效）
+# L1 service-wide (applied by app.Run)
 goblocks config global --rps 200 --burst 400
 
-# L2 每用户默认配额（全接口共享；需 infrastructure 挂载 UserRateLimit）
+# L2 per-user default quota (mount UserRateLimit in infrastructure)
 goblocks config user --enable --default-rps 30 --burst 60
 
-# L3 用户 API 单接口上限（与 L2 叠加；path 须与 Gin 路由模板一致）
+# L3 per-route cap (auto-mounted when routes exist; path must match Gin route template)
 goblocks config route add --method GET --path /users/:id --rps 50 --burst 100
 goblocks config route add --method POST --path /ai/chat --rps 5 --burst 10
 goblocks config route list
 goblocks config route remove --method POST --path /ai/chat
 
-# 熔断
+# Circuit breaker
 goblocks config breaker --max-requests 5 --consecutive-failures 5
 
-# 限流后端 memory | redis
+# Rate limit backend: memory | redis
 goblocks config backend --backend redis --redis-addr redis://localhost:6379/0
 ```
 
-## 开发
+## Development
 
 ```bash
 make build
